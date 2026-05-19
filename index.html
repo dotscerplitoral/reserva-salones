@@ -1,0 +1,2080 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reserva de salones para cursos del semipresencial</title>
+  <style>
+    :root {
+      --primary: #0878b9;
+      --primary-dark: #075985;
+      --anep-blue: #00AEEF;
+      --orange: #ff8a3d;
+      --orange-dark: #f97316;
+      --yellow: #ffd84d;
+      --coral: #ff575d;
+      --coral-dark: #d9363e;
+      --bg: #fff7e6;
+      --border: #f4c27b;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --white: #ffffff;
+      --success: #16a34a;
+      --success-soft: #dcfce7;
+      --soft-orange: #fff3df;
+      --soft-blue: #e0f2fe;
+      --soft-gray: #fffaf2;
+      --danger-bg: #fee2e2;
+      --danger: #991b1b;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Arial, sans-serif;
+      background:
+        radial-gradient(circle at 15% 10%, rgba(255, 216, 77, .85), transparent 32%),
+        radial-gradient(circle at 88% 18%, rgba(255, 138, 61, .55), transparent 30%),
+        linear-gradient(135deg, #ffe66d 0%, #ffb85c 44%, #ff8a55 100%);
+      color: var(--text);
+    }
+
+    .page {
+      min-height: 100vh;
+      padding: 28px 16px;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 1180px;
+      background: rgba(255,255,255,.94);
+      border: 1px solid rgba(255,255,255,.55);
+      border-radius: 26px;
+      box-shadow: 0 24px 70px rgba(92, 45, 12, 0.22);
+      overflow: hidden;
+      backdrop-filter: blur(8px);
+    }
+
+    .hero {
+      padding: 18px 22px;
+      background:
+        linear-gradient(135deg, rgba(255,216,77,.96) 0%, rgba(255,147,68,.96) 58%, rgba(255,111,81,.94) 100%);
+      color: #090909;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      width: 210px;
+      height: 210px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.20);
+      right: -60px;
+      top: -70px;
+    }
+
+    .brandRow {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .brandPill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255,255,255,.42);
+      border: 1px solid rgba(255,255,255,.62);
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-weight: 800;
+      font-size: .8rem;
+      color: #0f172a;
+    }
+
+    .brandDot {
+      width: 12px;
+      height: 12px;
+      border-radius: 999px;
+      background: var(--anep-blue);
+      box-shadow: 0 0 0 4px rgba(0,174,239,.18);
+    }
+
+    .cerpLabel {
+      font-weight: 800;
+      font-size: .8rem;
+      color: #111827;
+      background: rgba(255,255,255,.38);
+      border: 1px solid rgba(255,255,255,.55);
+      padding: 6px 10px;
+      border-radius: 999px;
+    }
+
+    .hero h1 {
+      position: relative;
+      z-index: 1;
+      margin: 0;
+      max-width: 820px;
+      font-size: clamp(1.4rem, 2.6vw, 2.2rem);
+      line-height: 1.1;
+      font-weight: 900;
+      letter-spacing: -.02em;
+      text-transform: uppercase;
+    }
+
+    .hero p {
+      position: relative;
+      z-index: 1;
+      margin: 8px 0 0;
+      max-width: 720px;
+      color: #111827;
+      font-size: .9rem;
+      font-weight: 600;
+    }
+
+    .content { padding: 28px 32px 34px; }
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-bottom: 26px;
+    }
+
+    .step {
+      border: 1px solid #ffd29b;
+      border-radius: 18px;
+      padding: 14px;
+      background: var(--soft-gray);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .stepNumber {
+      min-width: 38px;
+      height: 38px;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      font-weight: 900;
+      background: #fee7c1;
+      color: #9a3412;
+    }
+
+    .step.active {
+      border-color: var(--coral);
+      background: #fff1f2;
+      box-shadow: 0 8px 24px rgba(255,87,93,.12);
+    }
+
+    .step.active .stepNumber {
+      background: var(--coral);
+      color: white;
+    }
+
+    .step strong { display: block; font-size: .95rem; color: #111827; }
+    .step span { display: block; color: var(--muted); font-size: .82rem; margin-top: 2px; }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1.05fr .95fr;
+      gap: 24px;
+      align-items: start;
+    }
+
+    .card {
+      border: 1px solid #f6c985;
+      border-radius: 22px;
+      background: white;
+      padding: 22px;
+      box-shadow: 0 14px 30px rgba(92, 45, 12, .07);
+    }
+
+    .cardHeader {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+
+    .cardHeader h2,
+    .formSection h2,
+    .searchBox h2 {
+      margin: 0;
+      font-size: 1.2rem;
+      color: #111827;
+    }
+
+    .hint { color: var(--muted); font-size: .9rem; margin: 4px 0 0; }
+
+    .calendarTop {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .calendarTop button {
+      width: 40px;
+      height: 40px;
+      border-radius: 14px;
+      border: 1px solid #f6c985;
+      background: #fffaf2;
+      cursor: pointer;
+      font-size: 1.25rem;
+      color: #9a3412;
+      font-weight: 900;
+    }
+
+    .monthTitle { font-weight: 900; text-transform: capitalize; color: #111827; }
+
+    .weekdays,
+    .calendarGrid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 8px;
+    }
+
+    .weekdays div {
+      text-align: center;
+      font-size: .78rem;
+      color: #9a3412;
+      font-weight: 900;
+      padding-bottom: 4px;
+    }
+
+    .day {
+      min-height: 62px;
+      border-radius: 16px;
+      border: 1px solid #f2d3a7;
+      background: #fffaf2;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: space-between;
+      padding: 9px;
+      cursor: not-allowed;
+      color: #b8a18a;
+    }
+
+    .day.available { cursor: pointer; color: var(--text); background: #ffffff; }
+    .day.available:hover { border-color: var(--coral); background: #fff1f2; }
+    .day.selected { border-color: var(--coral); background: #fff1f2; box-shadow: 0 0 0 3px rgba(255,87,93,.18); }
+    .day .num { font-weight: 900; }
+
+    .tag {
+      font-size: .68rem;
+      font-weight: 900;
+      border-radius: 999px;
+      padding: 3px 7px;
+      background: #fde7bf;
+      color: #9a3412;
+    }
+
+    .day.available .tag { background: #dff5ff; color: #075985; }
+    .day.empty { visibility: hidden; }
+
+    .formSection { display: none; }
+    .formSection.active { display: block; animation: fade .2s ease-in-out; }
+
+    @keyframes fade {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .selectedBox {
+      background: #fff3df;
+      border: 1px solid #ffc47f;
+      border-left: 7px solid var(--orange-dark);
+      padding: 14px;
+      border-radius: 15px;
+      margin-bottom: 16px;
+      font-weight: 900;
+      color: #7c2d12;
+    }
+
+    .grid2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    label {
+      display: block;
+      font-weight: 900;
+      font-size: .9rem;
+      margin-bottom: 6px;
+      color: #111827;
+    }
+
+    input,
+    select {
+      width: 100%;
+      padding: 12px 13px;
+      border-radius: 13px;
+      border: 1px solid #f2c88c;
+      font: inherit;
+      outline: none;
+      background: white;
+    }
+
+    input:focus,
+    select:focus {
+      border-color: var(--coral);
+      box-shadow: 0 0 0 3px rgba(255,87,93,.15);
+    }
+
+    .field { margin-bottom: 14px; }
+
+    .actions {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    .btn {
+      border: 0;
+      border-radius: 14px;
+      padding: 12px 18px;
+      font-weight: 900;
+      cursor: pointer;
+      font-size: .95rem;
+    }
+
+    .btnPrimary {
+      background: var(--coral);
+      color: white;
+      box-shadow: 0 10px 20px rgba(255,87,93,.22);
+    }
+
+    .btnPrimary:hover { background: var(--coral-dark); }
+    .btnSecondary { background: #fee7c1; color: #7c2d12; }
+
+    .slots {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin: 10px 0 16px;
+    }
+
+    .slot,
+    .room {
+      border: 1px solid #f2c88c;
+      border-radius: 15px;
+      padding: 12px;
+      cursor: pointer;
+      background: white;
+      font-weight: 900;
+      text-align: left;
+      color: #1f2937;
+    }
+
+    .slot:hover,
+    .room:hover { border-color: var(--coral); background: #fff1f2; }
+    .slot.selected,
+    .room.selected { background: #fff1f2; border-color: var(--coral); box-shadow: 0 0 0 3px rgba(255,87,93,.15); }
+
+    .rooms {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .roomGroupTitle {
+      grid-column: 1 / -1;
+      margin: 6px 0 0;
+      padding: 8px 10px;
+      border-radius: 12px;
+      background: #fff3df;
+      border: 1px solid #ffc47f;
+      color: #7c2d12;
+      font-weight: 900;
+      font-size: .88rem;
+    }
+
+    .roomFilters {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 10px;
+      margin-bottom: 12px;
+    }
+
+    .filterField label {
+      font-size: .78rem;
+      margin-bottom: 4px;
+      color: #7c2d12;
+    }
+
+    .filterField select {
+      padding: 10px 11px;
+      font-size: .88rem;
+      border-radius: 12px;
+      background: #fffaf2;
+    }
+
+    .message {
+      display: none;
+      padding: 13px;
+      border-radius: 14px;
+      margin-top: 16px;
+      font-weight: 800;
+    }
+
+    .message.ok { display: block; background: var(--success-soft); color: #166534; }
+    .message.error { display: block; background: var(--danger-bg); color: var(--danger); }
+
+    .summary,
+    .searchBox {
+      background: #fffaf2;
+      border: 1px solid #f2c88c;
+      border-radius: 17px;
+      padding: 14px;
+      margin-top: 16px;
+      color: var(--muted);
+      font-size: .9rem;
+      line-height: 1.55;
+    }
+
+    .searchResults {
+      margin-top: 14px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .reservationItem {
+      background: white;
+      border: 1px solid #f2c88c;
+      border-radius: 14px;
+      padding: 12px;
+      color: var(--text);
+    }
+
+    .reservationItem strong { color: #0f172a; }
+
+    .reservationActions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .btnSmall {
+      border: 0;
+      border-radius: 10px;
+      padding: 8px 10px;
+      font-weight: 900;
+      cursor: pointer;
+      font-size: .78rem;
+    }
+
+    .btnDanger { background: var(--danger-bg); color: var(--danger); }
+    .btnEdit { background: #e0f2fe; color: #075985; }
+
+    .statusBadge {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 3px 8px;
+      font-size: .74rem;
+      font-weight: 900;
+      background: #dcfce7;
+      color: #166534;
+      margin-left: 6px;
+    }
+
+    .statusBadge.cancelled {
+      background: var(--danger-bg);
+      color: var(--danger);
+    }
+
+    .lockedNotice {
+      margin-top: 8px;
+      font-size: .82rem;
+      font-weight: 800;
+      color: var(--muted);
+    }
+
+    .roomTitle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      color: #111827;
+    }
+
+    .roomMeta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+      font-size: .74rem;
+      font-weight: 800;
+      color: #4b5563;
+    }
+
+    .roomBadge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: #fff7ed;
+      border: 1px solid #fed7aa;
+      border-radius: 999px;
+      padding: 3px 7px;
+    }
+
+    .roomBadge.recommended {
+      background: #dcfce7;
+      border-color: #86efac;
+      color: #166534;
+    }
+
+    .recommendationBox {
+      display: none;
+      background: #ecfdf5;
+      border: 1px solid #86efac;
+      border-left: 7px solid var(--success);
+      border-radius: 15px;
+      padding: 12px 14px;
+      margin: 12px 0 14px;
+      color: #166534;
+      font-size: .9rem;
+      font-weight: 800;
+      line-height: 1.45;
+    }
+
+    .recommendationBox.show { display: block; }
+
+    .fieldError {
+      display: none;
+      margin-top: 6px;
+      color: var(--danger);
+      font-size: .82rem;
+      font-weight: 800;
+    }
+
+    .fieldError.show { display: block; }
+
+    .authStatus {
+      display: none;
+      margin-top: 8px;
+      border-radius: 12px;
+      padding: 9px 11px;
+      font-size: .84rem;
+      font-weight: 800;
+      line-height: 1.35;
+    }
+
+    .authStatus.show { display: block; }
+    .authStatus.ok { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
+    .authStatus.warn { background: #fff7ed; color: #9a3412; border: 1px solid #fed7aa; }
+    .authStatus.error { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+
+
+    .specialtyReservations {
+      background: #f8fafc;
+      border: 1px solid #e5e7eb;
+      border-radius: 15px;
+      padding: 12px;
+      margin: 12px 0 16px;
+      display: grid;
+      gap: 9px;
+    }
+
+    .specialtyReservationsTitle {
+      font-weight: 900;
+      color: #111827;
+      margin-bottom: 2px;
+    }
+
+    .specialtyReservationItem {
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-left: 5px solid var(--anep-blue);
+      border-radius: 12px;
+      padding: 10px 11px;
+      color: var(--text);
+      line-height: 1.45;
+      font-size: .88rem;
+    }
+
+    .specialtyReservationItem strong { color: #0f172a; }
+
+    .btnGoogleAuth {
+      background: #ffffff;
+      color: #111827;
+      border: 1px solid #d1d5db;
+      box-shadow: 0 4px 12px rgba(17,24,39,.08);
+    }
+
+    input.invalid {
+      border-color: var(--danger);
+      box-shadow: 0 0 0 3px rgba(153, 27, 27, .12);
+    }
+
+    .successOverlay {
+      position: fixed;
+      inset: 0;
+      display: none;
+      place-items: center;
+      background: rgba(17, 24, 39, .42);
+      backdrop-filter: blur(5px);
+      z-index: 999;
+      padding: 18px;
+    }
+
+    .successOverlay.show { display: grid; }
+
+    .successModal {
+      width: min(420px, 100%);
+      background: white;
+      border-radius: 28px;
+      padding: 34px 28px;
+      text-align: center;
+      box-shadow: 0 30px 80px rgba(0,0,0,.25);
+      animation: modalIn .35s ease-out;
+    }
+
+    .checkWrap {
+      width: 108px;
+      height: 108px;
+      margin: 0 auto 18px;
+      border-radius: 999px;
+      background: var(--success-soft);
+      display: grid;
+      place-items: center;
+      animation: pop .55s ease-out .1s both;
+    }
+
+    .checkIcon {
+      width: 70px;
+      height: 70px;
+      border-radius: 999px;
+      background: var(--success);
+      display: grid;
+      place-items: center;
+      color: white;
+      font-size: 44px;
+      font-weight: 950;
+      transform: scale(.4);
+      animation: checkPop .45s cubic-bezier(.34,1.56,.64,1) .25s forwards;
+    }
+
+    .successModal h2 {
+      margin: 0;
+      font-size: 1.55rem;
+      color: #111827;
+    }
+
+    .successModal p {
+      margin: 10px 0 22px;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    @keyframes modalIn {
+      from { opacity: 0; transform: translateY(18px) scale(.96); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    @keyframes pop {
+      from { transform: scale(.6); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    @keyframes checkPop {
+      to { transform: scale(1); }
+    }
+
+    @media (max-width: 900px) {
+      .layout,
+      .steps,
+      .grid2,
+      .slots,
+      .rooms,
+      .roomFilters { grid-template-columns: 1fr; }
+
+      .content,
+      .hero { padding-left: 20px; padding-right: 20px; }
+
+      .brandRow { align-items: flex-start; flex-direction: column; }
+      .day { min-height: 52px; padding: 7px; }
+      .tag { display: none; }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="page">
+    <section class="app">
+      <header class="hero">
+        <div class="brandRow">
+          <div class="brandPill"><span class="brandDot"></span> ANEP · Consejo de Formación en Educación</div>
+          <div class="cerpLabel">CERP del Litoral · Sede Salto</div>
+        </div>
+        <h1>Reserva de salones para cursos del semipresencial</h1>
+        <p>Seleccioná una fecha habilitada, completá los datos del grupo, revisá las reservas existentes para la especialidad y luego elegí horarios y salón disponible.</p>
+      </header>
+
+      <section class="content">
+        <div class="steps">
+          <div class="step active" id="step1">
+            <div class="stepNumber">1</div>
+            <div><strong>Fecha y grupo</strong><span>Especialidad y nivel</span></div>
+          </div>
+          <div class="step" id="step2">
+            <div class="stepNumber">2</div>
+            <div><strong>Horario y salón</strong><span>Disponibilidad automática</span></div>
+          </div>
+          <div class="step" id="step3">
+            <div class="stepNumber">3</div>
+            <div><strong>Datos del docente</strong><span>Identificación y contacto</span></div>
+          </div>
+        </div>
+
+        <div class="layout">
+          <div class="card">
+            <div class="cardHeader">
+              <div>
+                <h2>Calendario</h2>
+                <p class="hint">Solo se pueden seleccionar viernes y sábados. Las fechas anteriores se muestran deshabilitadas para mantener correcta la grilla del calendario.</p>
+              </div>
+            </div>
+
+            <div class="calendarTop">
+              <button type="button" onclick="changeMonth(-1)">‹</button>
+              <div class="monthTitle" id="monthTitle"></div>
+              <button type="button" onclick="changeMonth(1)">›</button>
+            </div>
+
+            <div class="weekdays">
+              <div>Dom</div>
+              <div>Lun</div>
+              <div>Mar</div>
+              <div>Mié</div>
+              <div>Jue</div>
+              <div>Vie</div>
+              <div>Sáb</div>
+            </div>
+            <div class="calendarGrid" id="calendarGrid"></div>
+
+            <div class="searchBox">
+              <h2>Consultar mis reservas</h2>
+              <p class="hint">Ingresá el correo usado al reservar para ver todas las reservas asociadas.</p>
+              <div class="grid2" style="margin-top: 12px;">
+                <input id="searchEmail" type="email" placeholder="correo@dominio.edu.uy" />
+                <button class="btn btnPrimary" type="button" onclick="searchReservationsByEmail()">Buscar reservas</button>
+              </div>
+              <div class="searchResults" id="searchResults"></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div id="section1" class="formSection active">
+              <h2>Fecha y datos del grupo</h2>
+              <p class="hint">Primero seleccioná la fecha y completá especialidad, grupo y unidad curricular. Con esos datos se mostrarán las reservas existentes de esa especialidad para el día seleccionado.</p>
+
+              <div class="selectedBox" id="selectedDateBox">Todavía no seleccionaste una fecha.</div>
+
+              <div class="grid2">
+                <div class="field">
+                  <label for="specialty">Especialidad</label>
+                  <select id="specialty">
+                    <option value="">Seleccioná una especialidad</option>
+                    <option value="Geografía">Geografía</option>
+                    <option value="Com. Visual">Com. Visual</option>
+                    <option value="C. Biológicas">C. Biológicas</option>
+                    <option value="Derecho-Sociología">Derecho-Sociología</option>
+                    <option value="Derecho">Derecho</option>
+                    <option value="Informática">Informática</option>
+                    <option value="Español">Español</option>
+                    <option value="Literatura">Literatura</option>
+                    <option value="Filosofía">Filosofía</option>
+                    <option value="Física">Física</option>
+                    <option value="Historia">Historia</option>
+                    <option value="Inglés">Inglés</option>
+                    <option value="Matemática">Matemática</option>
+                    <option value="Química">Química</option>
+                    <option value="Otra">Otra</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="groupName">Grupo</label>
+                  <select id="groupName">
+                    <option value="">Seleccioná un grupo</option>
+                    <option value="1º">1º</option>
+                    <option value="2º">2º</option>
+                    <option value="3º">3º</option>
+                    <option value="4º">4º</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="field">
+                <label for="subject">Unidad curricular</label>
+                <input id="subject" type="text" placeholder="Ej.: Programación" />
+              </div>
+
+              <div class="specialtyReservations" id="specialtyReservationsBox">
+                <div class="specialtyReservationsTitle">Reservas de la especialidad</div>
+                <p class="hint">Seleccioná una fecha y una especialidad para ver las reservas existentes.</p>
+              </div>
+
+              <div class="actions">
+                <button class="btn btnSecondary" type="button" onclick="resetToStart()">Volver al inicio</button>
+                <button class="btn btnPrimary" type="button" onclick="goToStep(2)">Continuar</button>
+              </div>
+            </div>
+
+            <div id="section2" class="formSection">
+              <h2>Disponibilidad</h2>
+              <p class="hint">Marcá uno o varios bloques horarios y luego elegí un salón disponible para todos esos horarios.</p>
+
+              <label>Horarios disponibles</label>
+              <div class="slots" id="slotsBox">
+                <p class="hint">Completá la fecha y los datos del grupo para ver horarios.</p>
+              </div>
+
+              <div class="recommendationBox" id="recommendationBox"></div>
+
+              <label>Salones disponibles para todos los horarios marcados</label>
+              <div class="roomFilters" aria-label="Filtros de salones">
+                <div class="filterField">
+                  <label for="filterTv">TV</label>
+                  <select id="filterTv" onchange="handleRoomFilterChange()">
+                    <option value="all">Todos</option>
+                    <option value="yes">Solo con TV</option>
+                  </select>
+                </div>
+                <div class="filterField">
+                  <label for="filterAccessible">Accesibilidad</label>
+                  <select id="filterAccessible" onchange="handleRoomFilterChange()">
+                    <option value="all">Todos</option>
+                    <option value="yes">Solo accesibles</option>
+                  </select>
+                </div>
+                <div class="filterField">
+                  <label for="filterCapacity">Capacidad</label>
+                  <select id="filterCapacity" onchange="handleRoomFilterChange()">
+                    <option value="all">Todas</option>
+                    <option value="15">c15</option>
+                    <option value="20">c20</option>
+                    <option value="30">c30</option>
+                    <option value="35">c35</option>
+                    <option value="50">c50</option>
+                  </select>
+                </div>
+              </div>
+              <div class="rooms" id="roomsBox">
+                <p class="hint">Seleccioná fecha y horario para ver salones.</p>
+              </div>
+
+              <div class="actions">
+                <button class="btn btnSecondary" type="button" onclick="goToStep(1)">Volver</button>
+                <button class="btn btnSecondary" type="button" onclick="resetToStart()">Volver al inicio</button>
+                <button class="btn btnPrimary" type="button" onclick="goToStep(3)">Continuar</button>
+              </div>
+            </div>
+
+            <div id="section3" class="formSection">
+              <h2>Datos del docente</h2>
+              <p class="hint">Al confirmar, se enviará una notificación al correo ingresado.</p>
+
+              <div class="field">
+                <label for="teacherName">Nombre completo</label>
+                <input id="teacherName" type="text" placeholder="Ej.: María Rodríguez" oninput="validateTeacherNameLive()" />
+                <div class="fieldError" id="teacherNameError">El nombre debe tener al menos 4 caracteres y no puede contener números.</div>
+              </div>
+
+              <div class="grid2">
+                <div class="field">
+                  <label for="teacherDocument">Cédula</label>
+                  <input id="teacherDocument" type="text" inputmode="numeric" maxlength="8" placeholder="Ej.: 41234567" oninput="validateTeacherDocumentLive()" />
+                  <div class="fieldError" id="teacherDocumentError">Ingresá una cédula uruguaya válida, sin puntos ni guiones.</div>
+                </div>
+                <div class="field">
+                  <label for="teacherEmail">Correo electrónico</label>
+                  <input id="teacherEmail" type="email" placeholder="correo@dominio.edu.uy" oninput="handleTeacherEmailInput()" />
+                  <div class="fieldError" id="teacherEmailError">Ingresá un correo electrónico válido.</div>
+                  <div class="authStatus" id="teacherAuthStatus"></div>
+                  <button class="btnSmall btnGoogleAuth" id="googleAuthButton" type="button" onclick="iniciarSesionGoogle()" style="display:none; margin-top:8px;">Iniciar sesión con Google</button>
+                </div>
+              </div>
+
+              <div class="summary" id="summaryBox"></div>
+
+              <div class="actions">
+                <button class="btn btnSecondary" type="button" onclick="goToStep(2)">Volver</button>
+                <button class="btn btnSecondary" type="button" onclick="resetToStart()">Volver al inicio</button>
+                <button class="btn btnPrimary" type="button" onclick="saveReservation()">Confirmar reserva</button>
+              </div>
+            </div>
+
+            <div id="message" class="message"></div>
+          </div>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <div class="successOverlay" id="successOverlay">
+    <div class="successModal">
+      <div class="checkWrap">
+        <div class="checkIcon">✓</div>
+      </div>
+      <h2>Reserva confirmada</h2>
+      <p id="successText">La reserva fue registrada correctamente.</p>
+      <button class="btn btnPrimary" type="button" onclick="closeSuccessModal()">Entendido</button>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+    import {
+      getFirestore,
+      collection,
+      query,
+      where,
+      getDocs,
+      getDoc,
+      addDoc,
+      doc,
+      updateDoc,
+      serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+    import {
+      getAuth,
+      GoogleAuthProvider,
+      signInWithPopup,
+      onAuthStateChanged
+    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCAbGKfBG1VWkRqCMAVZQfU90IxG8qfTBY",
+      authDomain: "reservas-salones-968de.firebaseapp.com",
+      projectId: "reservas-salones-968de",
+      storageBucket: "reservas-salones-968de.firebasestorage.app",
+      messagingSenderId: "479805028463",
+      appId: "1:479805028463:web:01108e65e86f8f4dc4359a"
+    };
+
+    const EMAILJS_PUBLIC_KEY = "JxyElhC-gbPduFaDt";
+    const EMAILJS_SERVICE_ID = "service_ctovevl";
+    const EMAILJS_TEMPLATE_ID = "template_x1eqj7e";
+
+    emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+    const googleProvider = new GoogleAuthProvider();
+
+    let usuarioAutenticado = null;
+    onAuthStateChanged(auth, (user) => {
+      usuarioAutenticado = user;
+      updateAuthStatus();
+    });
+
+    const rooms = [
+      { nombre: "Salón 1", tv: true, accesible: false, capacidad: 50, tipo: "Salón" },
+      { nombre: "Salón 2", tv: true, accesible: false, capacidad: 50, tipo: "Salón" },
+      { nombre: "Salón 3", tv: true, accesible: false, capacidad: 15, tipo: "Salón" },
+      { nombre: "Salón 4", tv: true, accesible: false, capacidad: 50, tipo: "Salón" },
+      { nombre: "Salón 5", tv: true, accesible: false, capacidad: 50, tipo: "Salón" },
+      { nombre: "Salón 6", tv: true, accesible: false, capacidad: 15, tipo: "Salón" },
+      { nombre: "Salón 7", tv: true, accesible: false, capacidad: 15, tipo: "Salón" },
+      { nombre: "Salón 8", tv: true, accesible: false, capacidad: 15, tipo: "Salón" },
+      { nombre: "Salón 9", tv: true, accesible: false, capacidad: 15, tipo: "Salón" },
+      { nombre: "Salón 10", tv: false, accesible: false, capacidad: 15, tipo: "Salón" },
+      { nombre: "Salón 11", tv: true, accesible: false, capacidad: 35, tipo: "Salón" },
+      { nombre: "Salón 12", tv: true, accesible: false, capacidad: 35, tipo: "Salón" },
+      { nombre: "Salón 13", tv: true, accesible: false, capacidad: 15, tipo: "Salón" },
+      { nombre: "Salón 14", tv: true, accesible: false, capacidad: 15, tipo: "Salón" },
+      { nombre: "Salón 15", tv: true, accesible: false, capacidad: 15, tipo: "Salón" },
+      { nombre: "Salón 16", tv: true, accesible: false, capacidad: 15, tipo: "Salón" },
+      { nombre: "Salón 17", tv: true, accesible: false, capacidad: 35, tipo: "Salón" },
+      { nombre: "Salón 18", tv: true, accesible: false, capacidad: 35, tipo: "Salón" },
+      { nombre: "Salón 19", tv: true, accesible: false, capacidad: 35, tipo: "Salón" },
+      { nombre: "Salón 20", tv: true, accesible: false, capacidad: 35, tipo: "Salón" },
+      { nombre: "Salón 21", tv: false, accesible: true, capacidad: 35, tipo: "Salón" },
+      { nombre: "Salón 22", tv: true, accesible: true, capacidad: 35, tipo: "Salón" },
+      { nombre: "Salón 23", tv: false, accesible: true, capacidad: 35, tipo: "Salón" },
+      { nombre: "Laboratorio de informática", tv: true, accesible: true, capacidad: 30, tipo: "Laboratorio" },
+      { nombre: "Laboratorio de química", tv: false, accesible: true, capacidad: 20, tipo: "Laboratorio" },
+      { nombre: "Laboratorio de biología", tv: false, accesible: true, capacidad: 20, tipo: "Laboratorio" },
+      { nombre: "Laboratorio de física", tv: false, accesible: true, capacidad: 20, tipo: "Laboratorio" }
+    ];
+
+    let currentDate = new Date();
+    let selectedDate = null;
+    let selectedSlots = [];
+    let selectedRoom = null;
+    let currentAvailableRooms = [];
+    let editingReservationId = null;
+    let editingOriginalBlocks = [];
+    const reservationsById = new Map();
+    let teacherAuthCheckTimer = null;
+    let lastTeacherAuthResult = null;
+
+    const monthTitle = document.getElementById("monthTitle");
+    const calendarGrid = document.getElementById("calendarGrid");
+    const selectedDateBox = document.getElementById("selectedDateBox");
+    const slotsBox = document.getElementById("slotsBox");
+    const roomsBox = document.getElementById("roomsBox");
+    const recommendationBox = document.getElementById("recommendationBox");
+    const message = document.getElementById("message");
+    const successOverlay = document.getElementById("successOverlay");
+    const successText = document.getElementById("successText");
+    const specialtyReservationsBox = document.getElementById("specialtyReservationsBox");
+
+    function formatDate(date) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    }
+
+    function formatReadableDate(dateText) {
+      const date = new Date(dateText + "T00:00:00");
+      return date.toLocaleDateString("es-UY", {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+        year: "numeric"
+      });
+    }
+
+
+
+
+    function normalizeForId(text) {
+      return String(text)
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-zA-Z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "")
+        .toLowerCase();
+    }
+
+    function getBlockId(fecha, salon, horario) {
+      return `${fecha}_${normalizeForId(salon)}_${normalizeForId(horario)}`;
+    }
+
+    function getReservationBlocks(fecha, salon, horarios) {
+      return horarios.map(horario => ({
+        id: getBlockId(fecha, salon, horario),
+        fecha,
+        salon,
+        horario
+      }));
+    }
+
+    function getReservationStartDate(fecha, horarios) {
+      const firstSlot = [...horarios].sort()[0];
+      const startTime = firstSlot.split(" - ")[0];
+      return new Date(`${fecha}T${startTime}:00`);
+    }
+
+    function canEditOrCancelReservation(data) {
+      if (!data || data.estado === "cancelada") return false;
+      const startDate = getReservationStartDate(data.fecha, data.horarios || []);
+      const diffHours = (startDate - new Date()) / (1000 * 60 * 60);
+      return diffHours >= 24;
+    }
+
+    function isValidEmail(email) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    }
+
+    function isValidTeacherName(name) {
+      return name.length >= 4 && !/\d/.test(name);
+    }
+
+    function validateTeacherNameLive() {
+      const nameInput = document.getElementById("teacherName");
+      const errorBox = document.getElementById("teacherNameError");
+      const name = nameInput.value.trim();
+
+      if (!name || isValidTeacherName(name)) {
+        nameInput.classList.remove("invalid");
+        errorBox.classList.remove("show");
+        return true;
+      }
+
+      nameInput.classList.add("invalid");
+      errorBox.classList.add("show");
+      return false;
+    }
+
+    function cleanTeacherDocumentValue(value) {
+      return String(value).replace(/\D/g, "").slice(0, 8);
+    }
+
+    function isValidUruguayanCi(ci) {
+      const clean = cleanTeacherDocumentValue(ci);
+      if (!/^\d{7,8}$/.test(clean)) return false;
+
+      const padded = clean.padStart(8, "0");
+      const digits = padded.split("").map(Number);
+      const factors = [2, 9, 8, 7, 6, 3, 4];
+      const sum = factors.reduce((acc, factor, index) => acc + factor * digits[index], 0);
+      const checkDigit = (10 - (sum % 10)) % 10;
+      return checkDigit === digits[7];
+    }
+
+    function validateTeacherDocumentLive() {
+      const documentInput = document.getElementById("teacherDocument");
+      const errorBox = document.getElementById("teacherDocumentError");
+      const clean = cleanTeacherDocumentValue(documentInput.value);
+
+      if (documentInput.value !== clean) documentInput.value = clean;
+
+      if (!clean || isValidUruguayanCi(clean)) {
+        documentInput.classList.remove("invalid");
+        errorBox.classList.remove("show");
+        return true;
+      }
+
+      documentInput.classList.add("invalid");
+      errorBox.classList.add("show");
+      return false;
+    }
+
+    function validateTeacherEmailLive() {
+      const emailInput = document.getElementById("teacherEmail");
+      const errorBox = document.getElementById("teacherEmailError");
+      const email = emailInput.value.trim();
+
+      if (!email || isValidEmail(email)) {
+        emailInput.classList.remove("invalid");
+        errorBox.classList.remove("show");
+        return true;
+      }
+
+      emailInput.classList.add("invalid");
+      errorBox.classList.add("show");
+      return false;
+    }
+
+
+    function showTeacherAuthStatus(text, type = "warn", showButton = false) {
+      const statusBox = document.getElementById("teacherAuthStatus");
+      const googleButton = document.getElementById("googleAuthButton");
+      if (!statusBox || !googleButton) return;
+
+      if (!text) {
+        statusBox.className = "authStatus";
+        statusBox.textContent = "";
+        googleButton.style.display = "none";
+        return;
+      }
+
+      statusBox.className = `authStatus show ${type}`;
+      statusBox.textContent = text;
+      googleButton.style.display = showButton ? "inline-flex" : "none";
+    }
+
+    function updateAuthStatus() {
+      const emailInput = document.getElementById("teacherEmail");
+      if (!emailInput) return;
+      const email = emailInput.value.trim().toLowerCase();
+      if (!email || !isValidEmail(email)) return;
+      if (lastTeacherAuthResult && lastTeacherAuthResult.correo === email && !lastTeacherAuthResult.autorizado) {
+        if (usuarioAutenticado && usuarioAutenticado.email && usuarioAutenticado.email.toLowerCase() === email) {
+          showTeacherAuthStatus("Correo verificado con Google. Podés continuar con la reserva.", "ok", false);
+        } else if (usuarioAutenticado && usuarioAutenticado.email) {
+          showTeacherAuthStatus(`La sesión de Google actual es ${usuarioAutenticado.email}. Debe coincidir con el correo ingresado.`, "error", true);
+        } else {
+          showTeacherAuthStatus("Este correo no está en la lista de docentes autorizados. Para continuar, verificá la cuenta con Google.", "warn", true);
+        }
+      }
+    }
+
+    async function existeDocenteAutorizado(correo) {
+      const ref = doc(db, "docentesAutorizados", correo);
+      const snapshot = await getDoc(ref);
+      if (!snapshot.exists()) return false;
+      const data = snapshot.data();
+      return data.activo !== false;
+    }
+
+    async function checkTeacherAuthorizationLive() {
+      const emailInput = document.getElementById("teacherEmail");
+      if (!emailInput) return;
+      const correo = emailInput.value.trim().toLowerCase();
+
+      if (!correo) {
+        lastTeacherAuthResult = null;
+        showTeacherAuthStatus("", "warn", false);
+        return;
+      }
+
+      if (!isValidEmail(correo)) {
+        lastTeacherAuthResult = null;
+        showTeacherAuthStatus("", "warn", false);
+        return;
+      }
+
+      showTeacherAuthStatus("Verificando correo...", "warn", false);
+
+      try {
+        const autorizado = await existeDocenteAutorizado(correo);
+        lastTeacherAuthResult = { correo, autorizado };
+
+        if (autorizado) {
+          showTeacherAuthStatus("Correo encontrado en la lista de docentes autorizados.", "ok", false);
+          return;
+        }
+
+        if (usuarioAutenticado && usuarioAutenticado.email && usuarioAutenticado.email.toLowerCase() === correo) {
+          showTeacherAuthStatus("Correo verificado con Google. Podés continuar con la reserva.", "ok", false);
+        } else if (usuarioAutenticado && usuarioAutenticado.email) {
+          showTeacherAuthStatus(`Este correo no está en la lista. La sesión de Google actual es ${usuarioAutenticado.email}. Debe coincidir con el correo ingresado.`, "error", true);
+        } else {
+          showTeacherAuthStatus("Este correo no está en la lista de docentes autorizados. Para continuar, verificá la cuenta con Google.", "warn", true);
+        }
+      } catch (error) {
+        console.error("Error verificando docente autorizado:", error);
+        showTeacherAuthStatus("No se pudo verificar el correo en docentes autorizados. Revisá conexión y permisos de Firestore.", "error", false);
+      }
+    }
+
+    function handleTeacherEmailInput() {
+      validateTeacherEmailLive();
+      clearTimeout(teacherAuthCheckTimer);
+      teacherAuthCheckTimer = setTimeout(checkTeacherAuthorizationLive, 550);
+    }
+
+    async function iniciarSesionGoogle() {
+      try {
+        const resultado = await signInWithPopup(auth, googleProvider);
+        usuarioAutenticado = resultado.user;
+        updateAuthStatus();
+        return resultado.user;
+      } catch (error) {
+        console.error("Error en autenticación con Google:", error);
+        showMessage("No se pudo iniciar sesión con Google: " + error.message, "error");
+        return null;
+      }
+    }
+
+    async function validarCorreoDocenteParaReserva() {
+      const correoFormulario = document.getElementById("teacherEmail").value.trim().toLowerCase();
+
+      if (!correoFormulario || !isValidEmail(correoFormulario)) {
+        validateTeacherEmailLive();
+        return { valido: false, mensaje: "Ingresá un correo electrónico válido para continuar." };
+      }
+
+      try {
+        const autorizado = await existeDocenteAutorizado(correoFormulario);
+        lastTeacherAuthResult = { correo: correoFormulario, autorizado };
+
+        if (autorizado) {
+          showTeacherAuthStatus("Correo encontrado en la lista de docentes autorizados.", "ok", false);
+          return { valido: true, metodo: "lista_autorizada", correoAutenticado: null, uidAutenticado: null };
+        }
+
+        const user = usuarioAutenticado || await iniciarSesionGoogle();
+        if (!user) {
+          return { valido: false, mensaje: "Para continuar, tenés que autenticar este correo con Google." };
+        }
+
+        const correoGoogle = user.email ? user.email.trim().toLowerCase() : "";
+        if (correoGoogle !== correoFormulario) {
+          showTeacherAuthStatus(`El correo ingresado no coincide con la cuenta Google autenticada (${user.email}).`, "error", true);
+          return { valido: false, mensaje: "El correo ingresado no coincide con la cuenta Google autenticada." };
+        }
+
+        showTeacherAuthStatus("Correo verificado con Google. Podés continuar con la reserva.", "ok", false);
+        return { valido: true, metodo: "google_auth", correoAutenticado: correoGoogle, uidAutenticado: user.uid };
+      } catch (error) {
+        console.error("Error validando correo docente:", error);
+        return { valido: false, mensaje: "No se pudo validar el correo docente: " + error.message };
+      }
+    }
+
+    function getGroupData() {
+      return {
+        grupo: document.getElementById("groupName")?.value.trim() || "",
+        especialidad: document.getElementById("specialty")?.value.trim() || "",
+        unidadCurricular: document.getElementById("subject")?.value.trim() || ""
+      };
+    }
+
+    async function handleSpecialtyChange() {
+      selectedSlots = [];
+      selectedRoom = null;
+      currentAvailableRooms = [];
+      slotsBox.innerHTML = `<p class="hint">Completá la fecha y los datos del grupo para ver horarios.</p>`;
+      roomsBox.innerHTML = `<p class="hint">Seleccioná fecha y horario para ver salones.</p>`;
+      recommendationBox.className = "recommendationBox";
+      recommendationBox.innerHTML = "";
+      await loadSpecialtyReservations();
+      updateSummary();
+    }
+
+    function handleGroupFieldsChange() {
+      // Grupo y unidad curricular solo actualizan el resumen.
+      // La búsqueda de reservas por especialidad se dispara únicamente desde el campo Especialidad.
+      updateSummary();
+    }
+
+    async function loadSpecialtyReservations() {
+      const { especialidad } = getGroupData();
+
+      if (!specialtyReservationsBox) return;
+
+      if (!selectedDate || !especialidad) {
+        specialtyReservationsBox.innerHTML = `
+          <div class="specialtyReservationsTitle">Reservas de la especialidad</div>
+          <p class="hint">Seleccioná una fecha y una especialidad para ver las reservas existentes.</p>
+        `;
+        return;
+      }
+
+      specialtyReservationsBox.innerHTML = `
+        <div class="specialtyReservationsTitle">Reservas de ${especialidad} para ${formatReadableDate(selectedDate)}</div>
+        <p class="hint">Buscando reservas...</p>
+      `;
+
+      try {
+        const q = query(
+          collection(db, "reservas"),
+          where("fecha", "==", selectedDate),
+          where("especialidad", "==", especialidad)
+        );
+
+        const snapshot = await getDocs(q);
+        const reservas = snapshot.docs
+          .map(reservationDoc => ({ id: reservationDoc.id, ...reservationDoc.data() }))
+          .filter(data => data.estado !== "cancelada")
+          .sort((a, b) => (a.horarios?.[0] || "").localeCompare(b.horarios?.[0] || ""));
+
+        if (reservas.length === 0) {
+          specialtyReservationsBox.innerHTML = `
+            <div class="specialtyReservationsTitle">Reservas de ${especialidad} para ${formatReadableDate(selectedDate)}</div>
+            <p class="hint">No hay reservas activas registradas para esa especialidad en esta fecha.</p>
+          `;
+          return;
+        }
+
+        specialtyReservationsBox.innerHTML = `
+          <div class="specialtyReservationsTitle">Reservas de ${especialidad} para ${formatReadableDate(selectedDate)}</div>
+          ${reservas.map(data => `
+            <div class="specialtyReservationItem">
+              <strong>${data.salon || "Salón sin indicar"}</strong><br>
+              Especialidad: ${data.especialidad || "Sin indicar"}<br>
+              Nivel: ${data.grupo || "Sin indicar"}<br>
+              Horario reservado: ${(data.horarios || []).join(", ") || "Sin indicar"}<br>
+              Docente: ${data.docenteNombre || "Sin indicar"}
+            </div>
+          `).join("")}
+        `;
+      } catch (error) {
+        console.error("Error al consultar reservas por especialidad:", error);
+        specialtyReservationsBox.innerHTML = `
+          <div class="specialtyReservationsTitle">Reservas de la especialidad</div>
+          <p class="hint">No se pudieron cargar las reservas de esa especialidad. Revisá conexión o reglas de Firestore.</p>
+        `;
+      }
+    }
+
+    function renderRoomDetails(room) {
+      return `
+        <div class="roomTitle">
+          <span>${room.nombre}</span>
+        </div>
+        <div class="roomMeta">
+          <span class="roomBadge">c${room.capacidad}</span>
+          ${room.tv ? `<span class="roomBadge">TV</span>` : ""}
+          ${room.accesible ? `<span class="roomBadge">Accesible</span>` : ""}
+        </div>
+      `;
+    }
+
+    function getFilteredRooms(availableRooms) {
+      const filterTv = document.getElementById("filterTv")?.value || "all";
+      const filterAccessible = document.getElementById("filterAccessible")?.value || "all";
+      const filterCapacity = document.getElementById("filterCapacity")?.value || "all";
+
+      return availableRooms.filter(room => {
+        const matchesTv = filterTv === "all" || room.tv;
+        const matchesAccessible = filterAccessible === "all" || room.accesible;
+        const matchesCapacity = filterCapacity === "all" || room.capacidad === Number(filterCapacity);
+        return matchesTv && matchesAccessible && matchesCapacity;
+      });
+    }
+
+    function renderAvailableRooms(availableRooms) {
+      const filteredRooms = getFilteredRooms(availableRooms);
+
+      roomsBox.innerHTML = "";
+      recommendationBox.className = "recommendationBox";
+      recommendationBox.innerHTML = "";
+
+      if (availableRooms.length === 0) {
+        roomsBox.innerHTML = `<p class="hint">No hay salones disponibles para todos los horarios seleccionados.</p>`;
+        selectedRoom = null;
+        return;
+      }
+
+      if (filteredRooms.length === 0) {
+        selectedRoom = null;
+        roomsBox.innerHTML = `<p class="hint">No hay salones disponibles que coincidan con los filtros seleccionados.</p>`;
+        return;
+      }
+
+      const selectedRoomData = selectedRoom
+        ? filteredRooms.find(room => room.nombre === selectedRoom)
+        : null;
+
+      if (selectedRoom && !selectedRoomData) {
+        selectedRoom = null;
+      }
+
+      const grupos = [
+        { titulo: "Salones", tipo: "Salón" },
+        { titulo: "Laboratorios", tipo: "Laboratorio" }
+      ];
+
+      grupos.forEach(grupo => {
+        const roomsGroup = filteredRooms.filter(room => room.tipo === grupo.tipo);
+        if (roomsGroup.length === 0) return;
+
+        const title = document.createElement("div");
+        title.className = "roomGroupTitle";
+        title.textContent = grupo.titulo;
+        roomsBox.appendChild(title);
+
+        roomsGroup.forEach(room => {
+          const isSelected = selectedRoom ? room.nombre === selectedRoom : false;
+          const div = document.createElement("button");
+          div.type = "button";
+          div.className = `room ${isSelected ? "selected" : ""}`;
+          div.innerHTML = renderRoomDetails(room);
+          div.onclick = async () => {
+            selectedRoom = room.nombre;
+            document.querySelectorAll(".room").forEach(r => r.classList.remove("selected"));
+            div.classList.add("selected");
+            updateSummary();
+            await goToStep(3);
+          };
+
+          roomsBox.appendChild(div);
+        });
+      });
+    }
+
+    function handleRoomFilterChange() {
+      selectedRoom = null;
+      if (selectedDate && selectedSlots.length > 0) {
+        renderAvailableRooms(currentAvailableRooms);
+      }
+    }
+
+    function getTimeSlots(dateText) {
+      const day = new Date(dateText + "T00:00:00").getDay();
+
+      if (day === 5) {
+        return [
+          "20:00 - 20:45",
+          "20:45 - 21:30",
+          "21:30 - 22:15",
+          "22:15 - 23:00",
+          "23:00 - 23:35"
+        ];
+      }
+
+      if (day === 6) {
+        return [
+          "07:10 - 07:55",
+          "07:55 - 08:40",
+          "08:50 - 09:35",
+          "09:35 - 10:20",
+          "10:30 - 11:15",
+          "11:15 - 12:00",
+          "12:10 - 12:55"
+        ];
+      }
+
+      return [];
+    }
+
+    function renderCalendar() {
+      const year = currentDate.getFullYear();
+      const month = currentDate.getMonth();
+      const firstDay = new Date(year, month, 1);
+      const lastDay = new Date(year, month + 1, 0);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      monthTitle.textContent = firstDay.toLocaleDateString("es-UY", {
+        month: "long",
+        year: "numeric"
+      });
+
+      calendarGrid.innerHTML = "";
+
+      for (let i = 0; i < firstDay.getDay(); i++) {
+        const empty = document.createElement("div");
+        empty.className = "day empty";
+        calendarGrid.appendChild(empty);
+      }
+
+      for (let day = 1; day <= lastDay.getDate(); day++) {
+        const date = new Date(year, month, day);
+        date.setHours(0, 0, 0, 0);
+
+        const isPast = date < today;
+
+        const dayOfWeek = date.getDay();
+        const dateText = formatDate(date);
+        const isAvailable = (dayOfWeek === 5 || dayOfWeek === 6) && !isPast;
+
+        const item = document.createElement("button");
+        item.type = "button";
+        item.className = `day ${isAvailable ? "available" : ""} ${selectedDate === dateText ? "selected" : ""}`;
+        item.innerHTML = `
+          <span class="num">${day}</span>
+          <span class="tag">${dayOfWeek === 5 ? "Vie" : dayOfWeek === 6 ? "Sáb" : "No"}</span>
+        `;
+
+        if (isAvailable) item.onclick = () => selectDate(dateText);
+        calendarGrid.appendChild(item);
+      }
+    }
+
+    function selectDate(dateText) {
+      selectedDate = dateText;
+      selectedSlots = [];
+      selectedRoom = null;
+      selectedDateBox.textContent = `Fecha seleccionada: ${formatReadableDate(dateText)}`;
+      slotsBox.innerHTML = `<p class="hint">Completá los datos del grupo para ver horarios.</p>`;
+      recommendationBox.className = "recommendationBox";
+      recommendationBox.innerHTML = "";
+      roomsBox.innerHTML = `<p class="hint">Marcá uno o varios horarios para ver salones disponibles.</p>`;
+      loadSpecialtyReservations();
+      renderCalendar();
+    }
+
+    function renderSlots() {
+      slotsBox.innerHTML = "";
+      getTimeSlots(selectedDate).forEach(slot => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = `slot ${selectedSlots.includes(slot) ? "selected" : ""}`;
+        button.textContent = slot;
+        button.onclick = () => toggleSlot(slot);
+        slotsBox.appendChild(button);
+      });
+    }
+
+    async function toggleSlot(slot) {
+      selectedRoom = null;
+
+      if (selectedSlots.includes(slot)) {
+        selectedSlots = selectedSlots.filter(s => s !== slot);
+      } else {
+        selectedSlots.push(slot);
+      }
+
+      renderSlots();
+      await loadAvailableRooms();
+    }
+
+    async function loadAvailableRooms() {
+      recommendationBox.className = "recommendationBox";
+      recommendationBox.innerHTML = "";
+      roomsBox.innerHTML = `<p class="hint">Buscando salones disponibles...</p>`;
+
+      if (!selectedDate || selectedSlots.length === 0) {
+        roomsBox.innerHTML = `<p class="hint">Marcá uno o varios horarios para ver salones disponibles.</p>`;
+        return;
+      }
+
+      const occupiedRooms = new Set();
+
+      try {
+        for (const slot of selectedSlots) {
+          const q = query(
+            collection(db, "reservas"),
+            where("fecha", "==", selectedDate),
+            where("horarios", "array-contains", slot)
+          );
+
+          const snapshot = await getDocs(q);
+          snapshot.docs.forEach(reservationDoc => {
+            const data = reservationDoc.data();
+            const isSameEditingReservation = reservationDoc.id === editingReservationId;
+            const isCancelled = data.estado === "cancelada";
+
+            if (!isSameEditingReservation && !isCancelled && data.salon) {
+              occupiedRooms.add(data.salon);
+            }
+          });
+        }
+      } catch (error) {
+        console.error("Error al consultar disponibilidad:", error);
+        roomsBox.innerHTML = `<p class="hint">No se pudo consultar la disponibilidad. Revisá las reglas de Firestore o la conexión.</p>`;
+        return;
+      }
+
+      currentAvailableRooms = rooms
+        .filter(room => !occupiedRooms.has(room.nombre))
+        .sort((a, b) => b.capacidad - a.capacidad || a.nombre.localeCompare(b.nombre));
+
+      renderAvailableRooms(currentAvailableRooms);
+    }
+
+    async function validateStep(step) {
+      if (step === 2) {
+        const { grupo, especialidad, unidadCurricular } = getGroupData();
+
+        if (!selectedDate) {
+          showMessage("Primero seleccioná una fecha.", "error");
+          return false;
+        }
+
+        if (!grupo || !especialidad || !unidadCurricular) {
+          showMessage("Completá especialidad, grupo y unidad curricular antes de elegir horarios.", "error");
+          return false;
+        }
+      }
+
+      if (step === 3) {
+        if (!selectedDate || selectedSlots.length === 0 || !selectedRoom) {
+          showMessage("Primero seleccioná uno o varios horarios y un salón.", "error");
+          return false;
+        }
+      }
+
+      return true;
+    }
+
+    async function goToStep(step) {
+      if (!(await validateStep(step))) return;
+
+      document.querySelectorAll(".formSection").forEach(section => section.classList.remove("active"));
+      document.getElementById(`section${step}`).classList.add("active");
+
+      document.querySelectorAll(".step").forEach(stepBox => stepBox.classList.remove("active"));
+      document.getElementById(`step${step}`).classList.add("active");
+
+      message.className = "message";
+      message.textContent = "";
+
+      if (step === 2) renderSlots();
+      if (step === 3) updateSummary();
+    }
+
+    function updateSummary() {
+      const { grupo, especialidad, unidadCurricular } = getGroupData();
+      const selectedRoomData = rooms.find(room => room.nombre === selectedRoom);
+      const summary = document.getElementById("summaryBox");
+      if (!summary) return;
+
+      summary.innerHTML = `
+        <strong>Resumen de la reserva</strong><br>
+        Fecha: ${selectedDate ? formatReadableDate(selectedDate) : "Sin seleccionar"}<br>
+        Especialidad: ${especialidad || "Sin seleccionar"}<br>
+        Grupo: ${grupo || "Sin seleccionar"}<br>
+        Unidad curricular: ${unidadCurricular || "Sin completar"}<br>
+        Horarios: ${selectedSlots.length ? selectedSlots.join(", ") : "Sin seleccionar"}<br>
+        Salón: ${selectedRoom || "Sin seleccionar"}${selectedRoomData ? ` · c${selectedRoomData.capacidad}` : ""}<br>
+        Docente: ${document.getElementById("teacherName")?.value.trim() || "Sin completar"}
+      `;
+    }
+
+    async function isRoomStillAvailable() {
+      for (const slot of selectedSlots) {
+        const q = query(
+          collection(db, "reservas"),
+          where("fecha", "==", selectedDate),
+          where("salon", "==", selectedRoom),
+          where("horarios", "array-contains", slot)
+        );
+
+        const snapshot = await getDocs(q);
+        const hasActiveReservation = snapshot.docs.some(reservationDoc => {
+          const data = reservationDoc.data();
+          const isSameEditingReservation = reservationDoc.id === editingReservationId;
+          const isCancelled = data.estado === "cancelada";
+          return !isSameEditingReservation && !isCancelled;
+        });
+
+        if (hasActiveReservation) return false;
+      }
+
+      return true;
+    }
+
+    async function sendEmailNotification(reservationData) {
+      const templateParams = {
+        // Se envían ambos nombres porque algunos templates de EmailJS usan {{to_email}}
+        // y otros usan {{email}} en el campo destinatario/autoreply.
+        to_email: reservationData.docenteCorreo,
+        email: reservationData.docenteCorreo,
+        reply_to: reservationData.docenteCorreo,
+        to_name: reservationData.docenteNombre,
+        fecha: formatReadableDate(reservationData.fecha),
+        horarios: reservationData.horarios.join(", "),
+        salon: reservationData.salon,
+        grupo: reservationData.grupo,
+        especialidad: reservationData.especialidad,
+        unidadCurricular: reservationData.unidadCurricular,
+        cantidadEstudiantes: reservationData.cantidadEstudiantes || "No solicitada"
+      };
+
+      console.log("EmailJS templateParams", templateParams);
+      await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams);
+    }
+
+    function showSuccessModal(mailSent) {
+      successText.textContent = mailSent
+        ? "La reserva fue registrada correctamente y se envió la notificación al correo del docente."
+        : "La reserva fue registrada correctamente, pero no se pudo enviar el correo de notificación.";
+      successOverlay.classList.add("show");
+    }
+
+    function closeSuccessModal() {
+      successOverlay.classList.remove("show");
+    }
+
+    async function saveReservation() {
+      const { grupo: groupName, especialidad: specialty, unidadCurricular: subject } = getGroupData();
+      const teacherName = document.getElementById("teacherName").value.trim();
+      const teacherDocument = document.getElementById("teacherDocument").value.trim();
+      const teacherEmail = document.getElementById("teacherEmail").value.trim();
+
+      if (!groupName || !specialty || !subject) {
+        showMessage("Completá grupo, especialidad y unidad curricular.", "error");
+        goToStep(1);
+        return;
+      }
+
+      if (!teacherName || !teacherDocument || !teacherEmail) {
+        showMessage("Completá nombre, cédula y correo del docente.", "error");
+        return;
+      }
+
+      if (!isValidTeacherName(teacherName)) {
+        validateTeacherNameLive();
+        showMessage("El nombre completo debe tener al menos 4 caracteres y no puede contener números.", "error");
+        return;
+      }
+
+      if (!isValidUruguayanCi(teacherDocument)) {
+        validateTeacherDocumentLive();
+        showMessage("Ingresá una cédula uruguaya válida, sin puntos ni guiones.", "error");
+        return;
+      }
+
+      const resultadoValidacionCorreo = await validarCorreoDocenteParaReserva();
+      if (!resultadoValidacionCorreo.valido) {
+        showMessage(resultadoValidacionCorreo.mensaje, "error");
+        return;
+      }
+
+      if (!selectedRoom) {
+        showMessage("Seleccioná un salón antes de confirmar la reserva.", "error");
+        return;
+      }
+
+      const available = await isRoomStillAvailable();
+      if (!available) {
+        showMessage("Ese salón acaba de ser reservado por otra persona en uno de los horarios seleccionados.", "error");
+        await loadAvailableRooms();
+        goToStep(1);
+        return;
+      }
+
+      const reservationData = {
+        fecha: selectedDate,
+        horarios: selectedSlots,
+        salon: selectedRoom,
+        docenteNombre: teacherName,
+        docenteCedula: cleanTeacherDocumentValue(teacherDocument),
+        docenteCorreo: teacherEmail.toLowerCase(),
+        grupo: groupName,
+        especialidad: specialty,
+        unidadCurricular: subject,
+        cantidadEstudiantes: null,
+        estado: "activa",
+        verificacionMetodo: resultadoValidacionCorreo.metodo,
+        correoAutenticado: resultadoValidacionCorreo.correoAutenticado || null,
+        uidAutenticado: resultadoValidacionCorreo.uidAutenticado || null,
+        actualizadoEn: serverTimestamp()
+      };
+
+      try {
+        if (editingReservationId) {
+          await updateDoc(doc(db, "reservas", editingReservationId), reservationData);
+        } else {
+          await addDoc(collection(db, "reservas"), {
+            ...reservationData,
+            creadoEn: serverTimestamp()
+          });
+        }
+      } catch (error) {
+        console.error("Error al guardar reserva:", error);
+        showMessage("No se pudo guardar la reserva: " + error.message, "error");
+        return;
+      }
+
+      let mailSent = true;
+      try {
+        await sendEmailNotification(reservationData);
+        showMessage(editingReservationId ? "Reserva modificada correctamente." : "Reserva confirmada correctamente. Se envió una notificación al correo del docente.", "ok");
+      } catch (error) {
+        mailSent = false;
+        console.error("Error EmailJS:", error);
+        const emailErrorText = error.text || error.message || JSON.stringify(error);
+        showMessage("La reserva se guardó, pero falló el correo: " + emailErrorText, "error");
+      }
+
+      showSuccessModal(mailSent);
+      resetForm();
+    }
+
+    async function searchReservationsByEmail() {
+      const email = document.getElementById("searchEmail").value.trim().toLowerCase();
+      const resultsBox = document.getElementById("searchResults");
+
+      if (!email) {
+        resultsBox.innerHTML = `<div class="reservationItem">Ingresá un correo para buscar.</div>`;
+        return;
+      }
+
+      resultsBox.innerHTML = `<div class="reservationItem">Buscando reservas...</div>`;
+
+      try {
+        const q = query(
+          collection(db, "reservas"),
+          where("docenteCorreo", "==", email)
+        );
+
+        const snapshot = await getDocs(q);
+
+        if (snapshot.empty) {
+          resultsBox.innerHTML = `<div class="reservationItem">No se encontraron reservas para ese correo.</div>`;
+          return;
+        }
+
+        const reservas = snapshot.docs
+          .map(reservationDoc => ({ id: reservationDoc.id, ...reservationDoc.data() }))
+          .sort((a, b) => a.fecha.localeCompare(b.fecha));
+
+        reservationsById.clear();
+        resultsBox.innerHTML = "";
+
+        reservas.forEach(data => {
+          reservationsById.set(data.id, data);
+          const isCancelled = data.estado === "cancelada";
+          const canChange = canEditOrCancelReservation(data);
+          const div = document.createElement("div");
+          div.className = "reservationItem";
+          div.innerHTML = `
+            <strong>${formatReadableDate(data.fecha)}</strong>
+            <span class="statusBadge ${isCancelled ? "cancelled" : ""}">${isCancelled ? "Cancelada" : "Activa"}</span><br>
+            Horarios: ${data.horarios.join(", ")}<br>
+            Salón: ${data.salon}<br>
+            Grupo: ${data.grupo}<br>
+            Especialidad: ${data.especialidad}<br>
+            Unidad curricular: ${data.unidadCurricular}<br>
+            ${!isCancelled && canChange ? `
+              <div class="reservationActions">
+                <button class="btnSmall btnEdit" type="button" onclick="startEditReservation('${data.id}')">Modificar</button>
+                <button class="btnSmall btnDanger" type="button" onclick="cancelReservation('${data.id}')">Cancelar</button>
+              </div>
+            ` : ""}
+            ${!isCancelled && !canChange ? `<div class="lockedNotice">Esta reserva ya no puede modificarse ni cancelarse porque faltan menos de 24 horas.</div>` : ""}
+          `;
+          resultsBox.appendChild(div);
+        });
+
+      } catch (error) {
+        console.error("Error al buscar reservas:", error);
+        resultsBox.innerHTML = `
+          <div class="reservationItem">
+            Error al buscar reservas: ${error.message}
+          </div>
+        `;
+      }
+    }
+
+    async function startEditReservation(reservationId) {
+      const data = reservationsById.get(reservationId);
+      if (!data) return;
+
+      if (!canEditOrCancelReservation(data)) {
+        showMessage("Esta reserva ya no puede modificarse porque faltan menos de 24 horas.", "error");
+        return;
+      }
+
+      editingReservationId = reservationId;
+      editingOriginalBlocks = [];
+
+      selectedDate = data.fecha;
+      selectedSlots = [...data.horarios];
+      selectedRoom = data.salon;
+      currentDate = new Date(data.fecha + "T00:00:00");
+
+      document.getElementById("teacherName").value = data.docenteNombre || "";
+      document.getElementById("teacherDocument").value = data.docenteCedula || "";
+      document.getElementById("teacherEmail").value = data.docenteCorreo || "";
+      document.getElementById("groupName").value = data.grupo || "";
+      document.getElementById("specialty").value = data.especialidad || "";
+      document.getElementById("subject").value = data.unidadCurricular || "";
+
+      selectedDateBox.textContent = `Fecha seleccionada: ${formatReadableDate(selectedDate)}`;
+      renderCalendar();
+      await loadSpecialtyReservations();
+      renderSlots();
+      await loadAvailableRooms();
+      selectedRoom = data.salon;
+      renderAvailableRooms(currentAvailableRooms);
+      showMessage("Estás modificando una reserva existente. Revisá los datos y confirmá los cambios.", "ok");
+      goToStep(1);
+    }
+
+    async function cancelReservation(reservationId) {
+      const data = reservationsById.get(reservationId);
+      if (!data) return;
+
+      if (!canEditOrCancelReservation(data)) {
+        showMessage("Esta reserva ya no puede cancelarse porque faltan menos de 24 horas.", "error");
+        return;
+      }
+
+      const confirmed = confirm("¿Querés cancelar esta reserva? Esta acción liberará el salón y los horarios seleccionados.");
+      if (!confirmed) return;
+
+      try {
+        const reservationRef = doc(db, "reservas", reservationId);
+
+        await updateDoc(reservationRef, {
+          estado: "cancelada",
+          actualizadoEn: serverTimestamp()
+        });
+
+        showMessage("Reserva cancelada correctamente.", "ok");
+        await searchReservationsByEmail();
+        if (selectedDate && selectedSlots.length > 0) await loadAvailableRooms();
+      } catch (error) {
+        console.error("Error al cancelar reserva:", error);
+        showMessage("No se pudo cancelar la reserva: " + error.message, "error");
+      }
+    }
+
+    function resetForm(delayBeforeStart = true) {
+      editingReservationId = null;
+      editingOriginalBlocks = [];
+      selectedDate = null;
+      selectedSlots = [];
+      selectedRoom = null;
+      document.querySelectorAll("input").forEach(input => {
+        if (input.id !== "searchEmail") input.value = "";
+      });
+      document.getElementById("groupName").value = "";
+      document.getElementById("specialty").value = "";
+      document.getElementById("filterTv").value = "all";
+      document.getElementById("filterAccessible").value = "all";
+      document.getElementById("filterCapacity").value = "all";
+      currentAvailableRooms = [];
+      slotsBox.innerHTML = `<p class="hint">Seleccioná una fecha para ver horarios.</p>`;
+      roomsBox.innerHTML = `<p class="hint">Seleccioná fecha y horario para ver salones.</p>`;
+      recommendationBox.className = "recommendationBox";
+      recommendationBox.innerHTML = "";
+      selectedDateBox.textContent = "Todavía no seleccionaste una fecha.";
+      if (specialtyReservationsBox) {
+        specialtyReservationsBox.innerHTML = `
+          <div class="specialtyReservationsTitle">Reservas de la especialidad</div>
+          <p class="hint">Seleccioná una fecha y una especialidad para ver las reservas existentes.</p>
+        `;
+      }
+      renderCalendar();
+      lastTeacherAuthResult = null;
+      showTeacherAuthStatus("", "warn", false);
+      if (delayBeforeStart) {
+        setTimeout(() => goToStep(1), 1200);
+      } else {
+        goToStep(1);
+      }
+    }
+
+    function resetToStart() {
+      const confirmed = confirm("¿Querés volver al inicio y limpiar los datos cargados?");
+      if (!confirmed) return;
+      resetForm(false);
+      showMessage("Formulario reiniciado. Podés comenzar una nueva reserva.", "ok");
+    }
+
+    function showMessage(text, type) {
+      message.textContent = text;
+      message.className = `message ${type}`;
+    }
+
+    window.changeMonth = function (offset) {
+      currentDate.setMonth(currentDate.getMonth() + offset);
+      renderCalendar();
+    };
+
+    window.goToStep = goToStep;
+    window.loadAvailableRooms = loadAvailableRooms;
+    window.saveReservation = saveReservation;
+    window.searchReservationsByEmail = searchReservationsByEmail;
+    window.closeSuccessModal = closeSuccessModal;
+    window.validateTeacherEmailLive = validateTeacherEmailLive;
+    window.handleTeacherEmailInput = handleTeacherEmailInput;
+    window.iniciarSesionGoogle = iniciarSesionGoogle;
+    window.validateTeacherNameLive = validateTeacherNameLive;
+    window.validateTeacherDocumentLive = validateTeacherDocumentLive;
+    window.handleSpecialtyChange = handleSpecialtyChange;
+    window.handleGroupFieldsChange = handleGroupFieldsChange;
+    window.handleRoomFilterChange = handleRoomFilterChange;
+    window.startEditReservation = startEditReservation;
+    window.cancelReservation = cancelReservation;
+    window.resetToStart = resetToStart;
+
+    const specialtySelect = document.getElementById("specialty");
+    if (specialtySelect) {
+      ["change", "input"].forEach(eventName => {
+        specialtySelect.addEventListener(eventName, handleSpecialtyChange);
+      });
+    }
+
+    const groupSelect = document.getElementById("groupName");
+    if (groupSelect) {
+      ["change", "input"].forEach(eventName => {
+        groupSelect.addEventListener(eventName, handleGroupFieldsChange);
+      });
+    }
+
+    const subjectInput = document.getElementById("subject");
+    if (subjectInput) {
+      subjectInput.addEventListener("input", handleGroupFieldsChange);
+    }
+
+    renderCalendar();
+  </script>
+</body>
+
+</html>
