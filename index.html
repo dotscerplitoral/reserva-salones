@@ -966,6 +966,11 @@
       onAuthStateChanged
     } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 
+    import {
+      initializeAppCheck,
+      ReCaptchaV3Provider
+    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app-check.js";
+
     const firebaseConfig = {
       apiKey: "AIzaSyCAbGKfBG1VWkRqCMAVZQfU90IxG8qfTBY",
       authDomain: "reservas-salones-968de.firebaseapp.com",
@@ -982,6 +987,12 @@
     emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
 
     const app = initializeApp(firebaseConfig);
+
+    const appCheck = initializeAppCheck(app, {
+      provider: new ReCaptchaV3Provider("6Lf2JvssAAAAANofChpVxcYVi-es1zEoUnjP0VfF"),
+      isTokenAutoRefreshEnabled: true
+    });
+
     const db = getFirestore(app);
     const auth = getAuth(app);
     const googleProvider = new GoogleAuthProvider();
