@@ -897,7 +897,7 @@
 
               <div class="field">
                 <label for="teacherName">Nombre completo</label>
-                <input id="teacherName" type="text" placeholder="Ej.: María Rodríguez" oninput="validateTeacherNameLive()" />
+                <input id="teacherName" type="text" placeholder="Ej.: María Rodríguez" oninput="validateTeacherNameLive(); updateSummary();" />
                 <div class="fieldError" id="teacherNameError">El nombre debe tener al menos 4 caracteres y no puede contener números.</div>
               </div>
 
@@ -1714,7 +1714,7 @@
         Unidad curricular: ${unidadCurricular || "Sin completar"}<br>
         Horarios: ${selectedSlots.length ? selectedSlots.join(", ") : "Sin seleccionar"}<br>
         Salón: ${selectedRoom || "Sin seleccionar"}${selectedRoomData ? ` · c${selectedRoomData.capacidad}` : ""}<br>
-        Docente: ${document.getElementById("teacherName")?.value.trim() || "Sin completar"}
+        Docente/s: ${document.getElementById("teacherName")?.value.trim() || "Sin completar"}
       `;
     }
 
