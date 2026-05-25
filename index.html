@@ -1016,7 +1016,7 @@
       { nombre: "Salón 10", tv: false, accesible: false, capacidad: 15, tipo: "Salón" },
       { nombre: "Salón 11", tv: true, accesible: false, capacidad: 35, tipo: "Salón" },
       { nombre: "Salón 12", tv: true, accesible: false, capacidad: 35, tipo: "Salón" },
-      { nombre: "Salón 13", tv: true, accesible: false, capacidad: 15, tipo: "Salón" },
+      { nombre: "Salón 13", tv: false, accesible: false, capacidad: 15, tipo: "Salón" },
       { nombre: "Salón 14", tv: true, accesible: false, capacidad: 15, tipo: "Salón" },
       { nombre: "Salón 15", tv: true, accesible: false, capacidad: 15, tipo: "Salón" },
       { nombre: "Salón 16", tv: true, accesible: false, capacidad: 15, tipo: "Salón" },
@@ -1648,9 +1648,12 @@
         roomsBox.innerHTML = `<p class="hint">No se pudo consultar la disponibilidad. Revisá las reglas de Firestore o la conexión.</p>`;
         return;
       }
+      
+      const selectedDay = new Date(selectedDate + "T00:00:00").getDay();
 
       currentAvailableRooms = rooms
         .filter(room => !occupiedRooms.has(room.nombre))
+        .filter(room => !(selectedDay === 5 && room.nombre === "Salón 22"))
         .sort((a, b) => b.capacidad - a.capacidad || a.nombre.localeCompare(b.nombre));
 
       renderAvailableRooms(currentAvailableRooms);
