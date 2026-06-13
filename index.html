@@ -701,6 +701,33 @@
       to { transform: scale(1); }
     }
 
+
+    .calendarLoading {
+      grid-column: 1 / -1;
+      min-height: 180px;
+      display: grid;
+      place-items: center;
+      gap: 12px;
+      color: #7c2d12;
+      font-weight: 900;
+      background: #fffaf2;
+      border: 1px dashed #f2c88c;
+      border-radius: 18px;
+    }
+
+    .loader {
+      width: 44px;
+      height: 44px;
+      border: 5px solid #fee7c1;
+      border-top-color: var(--coral);
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
     @media (max-width: 900px) {
       .layout,
       .steps,
@@ -771,7 +798,12 @@
               <div>Vie</div>
               <div>Sáb</div>
             </div>
-            <div class="calendarGrid" id="calendarGrid"></div>
+            <div class="calendarGrid" id="calendarGrid">
+              <div class="calendarLoading">
+                <div class="loader"></div>
+                <strong>Cargando calendario...</strong>
+              </div>
+            </div>
 
             <div class="searchBox">
               <h2>Consultar mis reservas</h2>
@@ -1013,13 +1045,13 @@
       { nombre: "Salón 7", tv: true, accesible: false, capacidad: 15, tipo: "Salón" },
       { nombre: "Salón 8", tv: true, accesible: false, capacidad: 15, tipo: "Salón" },
       { nombre: "Salón 9", tv: true, accesible: false, capacidad: 15, tipo: "Salón" },
-      { nombre: "Salón 10", tv: false, accesible: false, capacidad: 15, tipo: "Salón" },
+      { nombre: "Salón 10", tv: true, accesible: false, capacidad: 15, tipo: "Salón" },
       { nombre: "Salón 11", tv: true, accesible: false, capacidad: 35, tipo: "Salón" },
       { nombre: "Salón 12", tv: true, accesible: false, capacidad: 35, tipo: "Salón" },
       { nombre: "Salón 13", tv: false, accesible: false, capacidad: 15, tipo: "Salón" },
       { nombre: "Salón 14", tv: true, accesible: false, capacidad: 15, tipo: "Salón" },
       { nombre: "Salón 15", tv: true, accesible: false, capacidad: 15, tipo: "Salón" },
-      { nombre: "Salón 16", tv: true, accesible: false, capacidad: 15, tipo: "Salón" },
+      { nombre: "Salón 16", tv: false, accesible: false, capacidad: 15, tipo: "Salón" },
       { nombre: "Salón 17", tv: true, accesible: false, capacidad: 35, tipo: "Salón" },
       { nombre: "Salón 18", tv: true, accesible: false, capacidad: 35, tipo: "Salón" },
       { nombre: "Salón 19", tv: true, accesible: false, capacidad: 35, tipo: "Salón" },
@@ -1523,7 +1555,10 @@
           "09:35 - 10:20",
           "10:30 - 11:15",
           "11:15 - 12:00",
-          "12:10 - 12:55"
+          "12:10 - 12:55",
+          "12:55 - 13:35",
+          "13:35 - 14:15",
+          "14:15 - 14:55"
         ];
       }
 
@@ -1653,7 +1688,10 @@
 
       currentAvailableRooms = rooms
         .filter(room => !occupiedRooms.has(room.nombre))
-        .filter(room => !(selectedDay === 5 && room.nombre === "Salón 22"))
+        .filter(room => !(
+          (selectedDay === 5 || selectedDay === 6) &&
+          ["Salón 22", "Laboratorio de informática"].includes(room.nombre)
+        ))
         .sort((a, b) => b.capacidad - a.capacidad || a.nombre.localeCompare(b.nombre));
 
       renderAvailableRooms(currentAvailableRooms);
