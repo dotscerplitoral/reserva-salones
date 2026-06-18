@@ -362,6 +362,31 @@
     }
 
     .btnPrimary:hover { background: var(--coral-dark); }
+
+    .btn:disabled {
+      opacity: .72;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    .btn.is-loading {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+    }
+
+    .btnLoader {
+      display: none;
+      width: 18px;
+      height: 18px;
+      border: 3px solid rgba(255,255,255,.45);
+      border-top-color: #ffffff;
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+    }
+
+    .btn.is-loading .btnLoader { display: inline-block; }
     .btnSecondary { background: #fee7c1; color: #7c2d12; }
 
     .slots {
@@ -953,7 +978,10 @@
               <div class="actions">
                 <button class="btn btnSecondary" type="button" onclick="goToStep(2)">Volver</button>
                 <button class="btn btnSecondary" type="button" onclick="resetToStart()">Volver al inicio</button>
-                <button class="btn btnPrimary" type="button" onclick="saveReservation()">Confirmar reserva</button>
+                <button class="btn btnPrimary" id="confirmReservationButton" type="button" onclick="saveReservation()">
+                  <span class="btnText">Confirmar reserva</span>
+                  <span class="btnLoader" aria-hidden="true"></span>
+                </button>
               </div>
             </div>
 
@@ -1087,6 +1115,8 @@
     const successOverlay = document.getElementById("successOverlay");
     const successText = document.getElementById("successText");
     const specialtyReservationsBox = document.getElementById("specialtyReservationsBox");
+    const confirmReservationButton = document.getElementById("confirmReservationButton");
+    let reservationSubmitInProgress = false;
 
     function formatDate(date) {
       const year = date.getFullYear();
@@ -1800,6 +1830,19 @@
       await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams);
     }
 
+    function setReservationSubmitLoading(isLoading) {
+      reservationSubmitInProgress = isLoading;
+      if (!confirmReservationButton) return;
+
+      confirmReservationButton.disabled = isLoading;
+      confirmReservationButton.classList.toggle("is-loading", isLoading);
+
+      const text = confirmReservationButton.querySelector(".btnText");
+      if (text) {
+        text.textContent = isLoading ? "Confirmando reserva..." : "Confirmar reserva";
+      }
+    }
+
     function showSuccessModal(mailSent) {
       successText.textContent = mailSent
         ? "La reserva fue registrada correctamente y se envió la notificación al correo del docente."
@@ -1812,99 +1855,114 @@
     }
 
     async function saveReservation() {
-      const { grupo: groupName, especialidad: specialty, unidadCurricular: subject } = getGroupData();
-      const teacherName = document.getElementById("teacherName").value.trim();
-      const teacherDocument = document.getElementById("teacherDocument").value.trim();
-      const teacherEmail = document.getElementById("teacherEmail").value.trim();
+      if (reservationSubmitInProgress) return;
 
-      if (!groupName || !specialty || !subject) {
-        showMessage("Completá grupo, especialidad y unidad curricular.", "error");
-        goToStep(1);
-        return;
-      }
+      setReservationSubmitLoading(true);
+      showMessage("Guardando reserva... Esperá la confirmación antes de volver a intentar.", "ok");
 
-      if (!teacherName || !teacherDocument || !teacherEmail) {
-        showMessage("Completá nombre, cédula y correo del docente.", "error");
-        return;
-      }
-
-      if (!isValidTeacherName(teacherName)) {
-        validateTeacherNameLive();
-        showMessage("El nombre completo debe tener al menos 4 caracteres y no puede contener números.", "error");
-        return;
-      }
-
-      if (!isValidUruguayanCi(teacherDocument)) {
-        validateTeacherDocumentLive();
-        showMessage("Ingresá una cédula uruguaya válida, sin puntos ni guiones.", "error");
-        return;
-      }
-
-      const resultadoValidacionCorreo = await validarCorreoDocenteParaReserva();
-      if (!resultadoValidacionCorreo.valido) {
-        showMessage(resultadoValidacionCorreo.mensaje, "error");
-        return;
-      }
-
-      if (!selectedRoom) {
-        showMessage("Seleccioná un salón antes de confirmar la reserva.", "error");
-        return;
-      }
-
-      const available = await isRoomStillAvailable();
-      if (!available) {
-        showMessage("Ese salón acaba de ser reservado por otra persona en uno de los horarios seleccionados.", "error");
-        await loadAvailableRooms();
-        goToStep(1);
-        return;
-      }
-
-      const reservationData = {
-        fecha: selectedDate,
-        horarios: selectedSlots,
-        salon: selectedRoom,
-        docenteNombre: teacherName,
-        docenteCedula: cleanTeacherDocumentValue(teacherDocument),
-        docenteCorreo: teacherEmail.toLowerCase(),
-        grupo: groupName,
-        especialidad: specialty,
-        unidadCurricular: subject,
-        cantidadEstudiantes: null,
-        estado: "activa",
-        verificacionMetodo: resultadoValidacionCorreo.metodo,
-        correoAutenticado: resultadoValidacionCorreo.correoAutenticado || null,
-        uidAutenticado: resultadoValidacionCorreo.uidAutenticado || null,
-        actualizadoEn: serverTimestamp()
-      };
+      let reservationSaved = false;
 
       try {
-        if (editingReservationId) {
-          await updateDoc(doc(db, "reservas", editingReservationId), reservationData);
-        } else {
-          await addDoc(collection(db, "reservas"), {
-            ...reservationData,
-            creadoEn: serverTimestamp()
-          });
+        const { grupo: groupName, especialidad: specialty, unidadCurricular: subject } = getGroupData();
+        const teacherName = document.getElementById("teacherName").value.trim();
+        const teacherDocument = document.getElementById("teacherDocument").value.trim();
+        const teacherEmail = document.getElementById("teacherEmail").value.trim();
+
+        if (!groupName || !specialty || !subject) {
+          showMessage("Completá grupo, especialidad y unidad curricular.", "error");
+          await goToStep(1);
+          return;
         }
-      } catch (error) {
-        console.error("Error al guardar reserva:", error);
-        showMessage("No se pudo guardar la reserva: " + error.message, "error");
-        return;
-      }
 
-      let mailSent = true;
-      try {
-        await sendEmailNotification(reservationData);
-        showMessage(editingReservationId ? "Reserva modificada correctamente." : "Reserva confirmada correctamente. Se envió una notificación al correo del docente.", "ok");
-      } catch (error) {
-        mailSent = false;
-        console.error("Error EmailJS:", error);
-        const emailErrorText = error.text || error.message || JSON.stringify(error);
-        showMessage("La reserva se guardó, pero falló el correo: " + emailErrorText, "error");
-      }
+        if (!teacherName || !teacherDocument || !teacherEmail) {
+          showMessage("Completá nombre, cédula y correo del docente.", "error");
+          return;
+        }
 
-      showSuccessModal(mailSent);
-      resetForm();
+        if (!isValidTeacherName(teacherName)) {
+          validateTeacherNameLive();
+          showMessage("El nombre completo debe tener al menos 4 caracteres y no puede contener números.", "error");
+          return;
+        }
+
+        if (!isValidUruguayanCi(teacherDocument)) {
+          validateTeacherDocumentLive();
+          showMessage("Ingresá una cédula uruguaya válida, sin puntos ni guiones.", "error");
+          return;
+        }
+
+        const resultadoValidacionCorreo = await validarCorreoDocenteParaReserva();
+        if (!resultadoValidacionCorreo.valido) {
+          showMessage(resultadoValidacionCorreo.mensaje, "error");
+          return;
+        }
+
+        if (!selectedRoom) {
+          showMessage("Seleccioná un salón antes de confirmar la reserva.", "error");
+          return;
+        }
+
+        const available = await isRoomStillAvailable();
+        if (!available) {
+          showMessage("Ese salón acaba de ser reservado por otra persona en uno de los horarios seleccionados.", "error");
+          await loadAvailableRooms();
+          await goToStep(1);
+          return;
+        }
+
+        const reservationData = {
+          fecha: selectedDate,
+          horarios: selectedSlots,
+          salon: selectedRoom,
+          docenteNombre: teacherName,
+          docenteCedula: cleanTeacherDocumentValue(teacherDocument),
+          docenteCorreo: teacherEmail.toLowerCase(),
+          grupo: groupName,
+          especialidad: specialty,
+          unidadCurricular: subject,
+          cantidadEstudiantes: null,
+          estado: "activa",
+          verificacionMetodo: resultadoValidacionCorreo.metodo,
+          correoAutenticado: resultadoValidacionCorreo.correoAutenticado || null,
+          uidAutenticado: resultadoValidacionCorreo.uidAutenticado || null,
+          actualizadoEn: serverTimestamp()
+        };
+
+        try {
+          if (editingReservationId) {
+            await updateDoc(doc(db, "reservas", editingReservationId), reservationData);
+          } else {
+            await addDoc(collection(db, "reservas"), {
+              ...reservationData,
+              creadoEn: serverTimestamp()
+            });
+          }
+        } catch (error) {
+          console.error("Error al guardar reserva:", error);
+          showMessage("No se pudo guardar la reserva: " + error.message, "error");
+          return;
+        }
+
+        reservationSaved = true;
+
+        let mailSent = true;
+        try {
+          await sendEmailNotification(reservationData);
+          showMessage(editingReservationId ? "Reserva modificada correctamente." : "Reserva confirmada correctamente. Se envió una notificación al correo del docente.", "ok");
+        } catch (error) {
+          mailSent = false;
+          console.error("Error EmailJS:", error);
+          const emailErrorText = error.text || error.message || JSON.stringify(error);
+          showMessage("La reserva se guardó, pero falló el correo: " + emailErrorText, "error");
+        }
+
+        showSuccessModal(mailSent);
+        resetForm();
+      } finally {
+        if (!reservationSaved) {
+          setReservationSubmitLoading(false);
+        }
+      }
     }
 
     async function searchReservationsByEmail() {
@@ -2038,6 +2096,7 @@
     }
 
     function resetForm(delayBeforeStart = true) {
+      setReservationSubmitLoading(false);
       editingReservationId = null;
       editingOriginalBlocks = [];
       selectedDate = null;
