@@ -1087,7 +1087,8 @@
       { nombre: "Salón 21", tv: false, accesible: true, capacidad: 35, tipo: "Salón" },
       { nombre: "Salón 22", tv: true, accesible: true, capacidad: 35, tipo: "Salón" },
       { nombre: "Salón 23", tv: false, accesible: true, capacidad: 35, tipo: "Salón" },
-      { nombre: "Laboratorio de informática", tv: true, accesible: true, capacidad: 30, tipo: "Laboratorio" },
+{ nombre: "Salón 24", tv: false, accesible: true, capacidad: 20, tipo: "Salón" },
+{ nombre: "Laboratorio de informática", tv: true, accesible: true, capacidad: 30, tipo: "Laboratorio" },
       { nombre: "Laboratorio de química", tv: true, accesible: true, capacidad: 20, tipo: "Laboratorio" },
       { nombre: "Laboratorio de biología", tv: true, accesible: true, capacidad: 20, tipo: "Laboratorio" },
       { nombre: "Laboratorio de física", tv: true, accesible: true, capacidad: 20, tipo: "Laboratorio" },
@@ -1569,11 +1570,14 @@
 
       if (day === 5) {
         return [
-          "20:00 - 20:45",
-          "20:45 - 21:30",
-          "21:30 - 22:15",
-          "22:15 - 23:00",
-          "23:00 - 23:35"
+          "17:55 - 18:40",
+      "18:40 - 19:25",
+      "19:25 - 20:00",
+      "20:00 - 20:45",
+      "20:45 - 21:30",
+      "21:30 - 22:15",
+      "22:15 - 23:00",
+      "23:00 - 23:35"
         ];
       }
 
@@ -1677,6 +1681,60 @@
       await loadAvailableRooms();
     }
 
+const fridayEarlySlots = [
+  "17:55 - 18:40",
+  "18:40 - 19:25",
+  "19:25 - 20:00"
+];
+
+const fridayLateSlots = [
+  "20:00 - 20:45",
+  "20:45 - 21:30",
+  "21:30 - 22:15",
+  "22:15 - 23:00",
+  "23:00 - 23:35"
+];
+
+const fridayEarlyRooms = [
+  "Salón 9",
+  "Salón 10",
+  "Salón 11",
+  "Salón 14",
+  "Salón 16",
+  "Salón 17",
+  "Salón 24",
+  "Mediateca",
+  "Laboratorio de química"
+];
+
+const fridayLateRooms = [
+  "Salón 1",
+  "Salón 2",
+  "Salón 3",
+  "Salón 4",
+  "Salón 5",
+  "Salón 6",
+  "Salón 7",
+  "Salón 8",
+  "Salón 9",
+  "Salón 10",
+  "Salón 11",
+  "Salón 12",
+  "Salón 13",
+  "Salón 14",
+  "Salón 15",
+  "Salón 16",
+  "Salón 17",
+  "Salón 18",
+  "Salón 19",
+  "Mediateca",
+  "Laboratorio de física",
+  "Laboratorio de química",
+  "Laboratorio de biología"
+];
+
+
+
     async function loadAvailableRooms() {
       recommendationBox.className = "recommendationBox";
       recommendationBox.innerHTML = "";
@@ -1714,15 +1772,55 @@
         return;
       }
       
-      const selectedDay = new Date(selectedDate + "T00:00:00").getDay();
+      const selectedDay = new Date(
+  selectedDate + "T00:00:00"
+).getDay();
 
-      currentAvailableRooms = rooms
-        .filter(room => !occupiedRooms.has(room.nombre))
-        .filter(room => !(
-          (selectedDay === 5 || selectedDay === 6) &&
-          ["Salón 22", "Laboratorio de informática"].includes(room.nombre)
-        ))
-        .sort((a, b) => b.capacidad - a.capacidad || a.nombre.localeCompare(b.nombre));
+currentAvailableRooms = rooms
+  // El salón no puede estar ocupado en ninguno de los horarios seleccionados.
+  .filter(room => !occupiedRooms.has(room.nombre))
+
+  // Restricciones específicas para los viernes.
+  .filter(room => {
+    if (selectedDay !== 5) {
+      return true;
+    }
+
+    /*
+      El salón debe estar habilitado en todos los bloques seleccionados.
+
+      Esto es importante cuando el docente selecciona horarios anteriores
+      y posteriores a las 20:00.
+    */
+    return selectedSlots.every(slot => {
+      if (fridayEarlySlots.includes(slot)) {
+        return fridayEarlyRooms.includes(room.nombre);
+      }
+
+      if (fridayLateSlots.includes(slot)) {
+        return fridayLateRooms.includes(room.nombre);
+      }
+
+      return false;
+    });
+  })
+
+  // Restricciones que se mantienen para los sábados.
+  .filter(room => {
+    if (selectedDay !== 6) {
+      return true;
+    }
+
+    return ![
+      "Salón 22",
+      "Laboratorio de informática"
+    ].includes(room.nombre);
+  })
+
+  .sort((a, b) =>
+    b.capacidad - a.capacidad ||
+    a.nombre.localeCompare(b.nombre)
+  );
 
       renderAvailableRooms(currentAvailableRooms);
     }
