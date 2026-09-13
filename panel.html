@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Panel admin - Reservas de salones</title>
+  <link rel="stylesheet" href="./css/styles.css" />
+</head>
+<body data-page="panel" class="authLocked">
+
+  <div id="authGate" class="authGate" role="dialog" aria-modal="true" aria-labelledby="authGateTitle">
+    <div class="authCard">
+      <div class="authBrand"><span class="brandDot"></span> CERP del Litoral</div>
+      <h1 id="authGateTitle">Acceso al panel de reservas</h1>
+      <p>Ingresá la contraseña para visualizar y administrar las reservas.</p>
+
+      <form id="authForm" class="authForm">
+        <label for="authPassword">Contraseña</label>
+        <input id="authPassword" type="password" autocomplete="current-password" placeholder="Ingresá la contraseña" required />
+        <button class="btn authButton" type="submit">Ingresar</button>
+        <p id="authError" class="authError" aria-live="polite"></p>
+      </form>
+    </div>
+  </div>
+
+  <main class="page">
+    <section class="app">
+      <header class="hero">
+        <div class="brandRow">
+          <div class="brandPill"><span class="brandDot"></span> ANEP · Consejo de Formación en Educación</div>
+          <div class="cerpLabel">CERP del Litoral · Sede Salto</div>
+        </div>
+        <h1>Resumen de reservas de salones</h1>
+        <p>Vista interna para consultar rápidamente qué docentes reservaron, en qué salón, horarios y grupo.</p>
+      </header>
+
+      <section class="content">
+        <div class="toolbar">
+          <div class="fieldMode">
+            <label for="dateModeFilter">Visualización</label>
+            <select id="dateModeFilter">
+              <option value="weekend">Viernes y sábado</option>
+              <option value="all">Todas las reservas</option>
+              <option value="custom">Rango personalizado</option>
+            </select>
+          </div>
+
+          <div id="weekendField" class="dateField fieldWeekend">
+            <label for="weekendFilter">Semana / bloque</label>
+            <select id="weekendFilter"></select>
+          </div>
+
+          <div id="fromDateField" class="dateField fieldDate isHidden">
+            <label for="fromDateFilter">Desde</label>
+            <input id="fromDateFilter" type="date" />
+          </div>
+
+          <div id="toDateField" class="dateField fieldDate isHidden">
+            <label for="toDateFilter">Hasta</label>
+            <input id="toDateFilter" type="date" />
+          </div>
+
+          <div class="fieldSearch">
+            <label for="searchFilter">Docente, email, grupo o UC</label>
+            <input id="searchFilter" type="text" placeholder="Ej.: Programación, 3°, correo..." />
+          </div>
+
+          <button class="btn iconBtn" type="button" onclick="loadReservations()" title="Actualizar" aria-label="Actualizar reservas">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+              <path d="M21 12a9 9 0 0 1-15.2 6.5" />
+              <path d="M3 12A9 9 0 0 1 18.2 5.5" />
+              <path d="M18 2v4h4" />
+              <path d="M6 22v-4H2" />
+            </svg>
+          </button>
+          <button class="btn btnSecondary iconBtn" type="button" onclick="printReservations()" title="Imprimir" aria-label="Imprimir listado">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+              <path d="M6 9V2h12v7" />
+              <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+              <path d="M6 14h12v8H6z" />
+            </svg>
+          </button>
+        </div>
+
+        <div class="stats">
+          <div class="stat"><span>Total de reservas</span><strong id="totalReservations">0</strong><small id="totalReservationsGlobal">Total general: 0</small></div>
+          <div class="stat latestStat"><span>Últimas reservas ingresadas</span><div id="latestReservationsInfo"><small>Sin datos</small></div></div>
+          <div class="stat latestStat deletedStat"><span>Últimas 3 eliminadas</span><div id="latestDeletedReservationsInfo"><small>Sin eliminaciones</small></div></div>
+        </div>
+
+        <div id="statusMessage" class="message">Cargando reservas...</div>
+
+        <div class="printHeader">
+          <h1>Listado de reservas de salones</h1>
+          <p id="printInfo">CERP del Litoral · Sede Salto</p>
+        </div>
+
+        <section id="reservationsContainer"></section>
+      </section>
+    </section>
+  </main>
+  <div id="manageModal" class="modalOverlay isHidden" role="dialog" aria-modal="true" aria-labelledby="manageModalTitle">
+    <div class="modalCard manageModalCard">
+      <div class="modalHeader">
+        <div>
+          <span class="modalEyebrow">Administración</span>
+          <h2 id="manageModalTitle">Gestionar reserva</h2>
+        </div>
+        <button id="closeManageModal" class="modalClose" type="button" aria-label="Cerrar">×</button>
+      </div>
+      <div id="manageModalBody" class="manageReservations"></div>
+    </div>
+  </div>
+
+  <div id="deleteModal" class="modalOverlay isHidden modalOverlayTop" role="dialog" aria-modal="true" aria-labelledby="deleteModalTitle">
+    <div class="modalCard deleteModalCard">
+      <div class="modalHeader">
+        <div>
+          <span class="modalEyebrow dangerText">Confirmación requerida</span>
+          <h2 id="deleteModalTitle">Eliminar reserva</h2>
+        </div>
+        <button id="closeDeleteModal" class="modalClose" type="button" aria-label="Cerrar">×</button>
+      </div>
+      <p id="deleteReservationInfo" class="deleteWarning"></p>
+      <label for="deleteConfirmInput">Para confirmar, escribí <strong>eliminar</strong></label>
+      <input id="deleteConfirmInput" type="text" autocomplete="off" placeholder="eliminar" />
+      <div class="modalActions">
+        <button id="cancelDeleteBtn" class="smallActionBtn secondaryAction" type="button">Cancelar</button>
+        <button id="confirmDeleteBtn" class="smallActionBtn dangerAction" type="button" disabled>Eliminar reserva</button>
+      </div>
+      <p id="deleteActionStatus" class="actionStatus" aria-live="polite"></p>
+    </div>
+  </div>
+
+  <script>
+    (() => {
+      const ACCESS_KEY = "cerpReservasPanelAccess";
+      const ACCESS_VALUE = "autorizado";
+      const PANEL_PASSWORD = "usuario";
+
+      const gate = document.getElementById("authGate");
+      const form = document.getElementById("authForm");
+      const passwordInput = document.getElementById("authPassword");
+      const errorMessage = document.getElementById("authError");
+      let appLoaded = false;
+
+      function loadPanelApp() {
+        if (appLoaded) return;
+        appLoaded = true;
+        const script = document.createElement("script");
+        script.type = "module";
+        script.src = "./js/app.js";
+        document.body.appendChild(script);
+      }
+
+      function unlockPanel() {
+        document.body.classList.remove("authLocked");
+        gate.classList.add("isHidden");
+        loadPanelApp();
+      }
+
+      if (localStorage.getItem(ACCESS_KEY) === ACCESS_VALUE) {
+        unlockPanel();
+      } else {
+        requestAnimationFrame(() => passwordInput.focus());
+      }
+
+      form.addEventListener("submit", event => {
+        event.preventDefault();
+
+        if (passwordInput.value === PANEL_PASSWORD) {
+          localStorage.setItem(ACCESS_KEY, ACCESS_VALUE);
+          errorMessage.textContent = "";
+          passwordInput.value = "";
+          unlockPanel();
+          return;
+        }
+
+        errorMessage.textContent = "Contraseña incorrecta.";
+        passwordInput.select();
+        passwordInput.focus();
+      });
+    })();
+  </script>
+</body>
+</html>
